@@ -294,6 +294,6 @@ and rebase both modules; until then no shared package exists.
 
 ## Menu integration
 
-Menu-hub surface per `telegram-platform-menu/docs/tasks/menu_integration.md` (M-3b):
+Menu-hub surface per `telegram-platform-menu` contribution system (M-3b):
 `TtsWebUi` — §8.3 schema form over the same raw keys `TtsSettings::fromArray()`
 reads (auto_speak, provider, voice, limits, quota, error mode).
