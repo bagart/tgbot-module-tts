@@ -4,7 +4,7 @@
 
 | Need | File |
 |---|---|
-| What it does, decisions | `SDD-tts` |
+| What it does, decisions | [`sdd/tts.md`](sdd/tts.md) |
 
 ## Source map (src/)
 
