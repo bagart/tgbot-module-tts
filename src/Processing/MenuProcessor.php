@@ -10,7 +10,6 @@ use BAGArt\TelegramBot\Contracts\Outbound\TgSenderContract;
 use BAGArt\TelegramBot\Contracts\Processing\Processors\TgModuleProcessorContract;
 use BAGArt\TelegramBot\Contracts\TgApi\TgApiTypeDTOContract;
 use BAGArt\TelegramBot\Processing\BotProcessorContext;
-use BAGArt\TelegramBot\Processing\ErrorHandling\ProcessorErrorContext;
 use BAGArt\TelegramBot\Processing\TgProcessorDefaultTrait;
 use BAGArt\TelegramBot\TgApi\Methods\DTO\AnswerCallbackQueryMethodDTO;
 use BAGArt\TelegramBot\TgApi\Methods\DTO\SendMessageMethodDTO;
@@ -348,7 +347,4 @@ class MenuProcessor implements TgModuleProcessorContract
         }
     }
 
-    public function onException(ProcessorErrorContext $context): void
-    {
-    }
 }

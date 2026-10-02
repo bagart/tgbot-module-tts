@@ -6,14 +6,14 @@ namespace BAGArt\TelegramBotTts\Settings;
 
 use BAGArt\TelegramBot\Contracts\Modules\ModuleEnablementContract;
 use BAGArt\TelegramBot\Contracts\Modules\ModuleSettingsContract;
-use BAGArt\TelegramBotManagement\Models\TgModuleEnablement;
 use BAGArt\TelegramBotTts\TtsModuleId;
-use Illuminate\Support\Facades\DB;
 
 /**
- * Reads effective TTS settings and persists chat-level patches into the
- * module enablement row (same row drives is_enabled), busting caches
- * through ModuleEnablementContract::refresh() (Summarizer mechanics).
+ * Reads effective TTS settings and persists chat-level patches through
+ * ModuleSettingsContract (driver-agnostic: legacy enablement rows or engine
+ * activation rows). The reserved `enabled` patch key flips chat enablement
+ * instead of landing in the settings map — the contract owns that mirror
+ * and the cache refresh behind it.
  */
 class TtsSettingsService
 {
@@ -36,40 +36,10 @@ class TtsSettingsService
     }
 
     /**
-     * @param  array<string, mixed>  $patch  settings keys to merge into the chat-level row
+     * @param  array<string, mixed|null>  $patch  settings keys to merge at the chat scope; null removes a key, `enabled` flips enablement
      */
     public function patch(string $botId, int $chatId, array $patch): void
     {
-        DB::transaction(function () use ($botId, $chatId, $patch): void {
-            $row = TgModuleEnablement::query()
-                ->where('bot_id', $botId)
-                ->where('chat_id', $chatId)
-                ->where('module_id', TtsModuleId::ID)
-                ->lockForUpdate()
-                ->first();
-
-            if ($row === null) {
-                $row = new TgModuleEnablement([
-                    'bot_id' => $botId,
-                    'chat_id' => $chatId,
-                    'module_id' => TtsModuleId::ID,
-                    'is_enabled' => true,
-                    'module_settings' => [],
-                ]);
-            }
-
-            $current = is_array($row->module_settings) ? $row->module_settings : [];
-            $row->module_settings = array_merge($current, $patch);
-
-            if (array_key_exists('enabled', $patch)) {
-                // Chat-level opt-in/out (same key drives the enablement
-                // selector; absence of a row inherits bot/platform default).
-                $row->is_enabled = (bool) $patch['enabled'];
-            }
-
-            $row->save();
-        });
-
-        $this->enablement->refresh($botId, $chatId);
+        $this->settings->patchSettings(TtsModuleId::ID, $botId, $chatId, $patch);
     }
 }

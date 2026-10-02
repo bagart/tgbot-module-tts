@@ -8,8 +8,8 @@ declare(strict_types=1);
 |--------------------------------------------------------------------------
 |
 | Text-to-speech module (bagart/tgbot-module-tts). Per-chat settings
-| live in tg_module_enablements.module_settings; these are platform
-| defaults and operational limits.
+| live in the module settings store behind ModuleSettingsContract;
+| these are platform defaults and operational limits.
 |
 */
 

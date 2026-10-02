@@ -17,7 +17,7 @@ it('satisfies the TgWebUiContract shape for the tts module', function () {
 it('declares a schema entry over the settings vocabulary', function () {
     $entry = TtsWebUi::manifest()->entry;
 
-    expect($entry->type)->toBe('schema');
+    expect($entry->type)->toBe(\BAGArt\TelegramBotMenu\Manifest\UiEntryType::Schema);
 
     $keys = [];
     foreach ($entry->groups as $group) {
@@ -33,7 +33,7 @@ it('declares a schema entry over the settings vocabulary', function () {
 });
 
 it('maps schema keys onto TtsSettings raw keys via validate', function () {
-    $patch = (new TtsWebUi)->validate([
+    $patch = (new TtsWebUi())->validate([
         'auto_speak' => true,
         'provider_key' => 'kokoro',
         'voice' => ' af_heart ',
@@ -53,7 +53,7 @@ it('maps schema keys onto TtsSettings raw keys via validate', function () {
 });
 
 it('feeds the validated patch straight into TtsSettings::fromArray', function () {
-    $patch = (new TtsWebUi)->validate([
+    $patch = (new TtsWebUi())->validate([
         'auto_speak' => true,
         'caption' => 'none',
         'max_chars' => 500,
@@ -67,7 +67,7 @@ it('feeds the validated patch straight into TtsSettings::fromArray', function ()
 });
 
 it('rejects unknown enum and provider values', function () {
-    $form = new TtsWebUi;
+    $form = new TtsWebUi();
 
     expect(fn () => $form->validate(['provider_key' => 'skynet']))
         ->toThrow(InvalidArgumentException::class)
@@ -78,7 +78,7 @@ it('rejects unknown enum and provider values', function () {
 });
 
 it('drops unrelated keys and keeps the module configured', function () {
-    $form = new TtsWebUi;
+    $form = new TtsWebUi();
 
     expect($form->validate(['evil_key' => 'x', 'custom_provider' => ['token' => 'steal']]))->toBe([])
         ->and($form->isConfigured([]))->toBeTrue();

@@ -30,7 +30,8 @@ class TtsModule implements TgModuleContract
         return new TgModuleDescriptor(
             id: TtsModuleId::ID,
             name: 'Text to Speech',
-            version: '0.1.0',
+            version: '0.2.0',
+            requiresModules: ['menu' => '*'],
             capabilities: [
                 TgModuleCapability::Processor,
                 TgModuleCapability::Command,

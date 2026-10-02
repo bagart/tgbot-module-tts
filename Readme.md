@@ -69,10 +69,10 @@ bootloaded modules + enablement filtering apply):
 
 ```sh
 docker exec -e TELEGRAM_BOT_TOKEN=… <php-fpm-container> sh -c \
-  'cd /var/www && php misc/BAGArt/telegram-bot-lib/commands/debug/poller-modules.php'
+  'cd /var/www && php misc/BAGArt/telegram-bot-lib/cmd/debug/poller-modules.php'
 ```
 
-Do NOT use `commands/poller-daemon.php` for modules — it overrides the
+Do NOT use `cmd/poller-daemon.php` for modules — it overrides the
 processor registry with lib demo processors, consumes updates silently and
 never runs `/voice`.
 
@@ -224,7 +224,6 @@ php artisan tts:prune              # retention sweep (scheduled daily)
 | `storage_path` / `TTS_STORAGE_PATH` | `storage/framework/tts` | synthesized tmpfiles (0600) |
 | `retention_days` / `TTS_RETENTION_DAYS` | 30 | prune age for rows/files |
 | `pending_input_ttl_seconds` / `TTS_PENDING_INPUT_TTL` | 900 | panel text-input lifetime |
-| `schedule_prune_enabled` / `SCHEDULE_TTS_PRUNE_ENABLED` | true | host schedule gate |
 | `presets.edge-tts.base_url` / `TTS_EDGE_TTS_BASE_URL` | `http://localhost:55000` | fleet-wide wrapper repoint |
 
 Per-chat settings (`tg_module_enablements.module_settings`, inherited
@@ -239,7 +238,7 @@ platform → bot → chat, transactional upsert + cache bust):
 | `max_chars` | int 1–4000 | 1000 |
 | `on_error` | enum | `auto` (`silent`\|`emoji`\|`message`\|`auto`) |
 | `daily_quota` | int 0–10000 | 50 (0 = unlimited) |
-| `locale` | enum | `ru` (`ru`\|`en`) |
+| `locale` | enum | `ru` (`ru`\|`en`\|`fr`\|`es`\|`zh`) |
 | `notice_shown` | bool | false (internal) |
 
 ## 9. Testing

@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace BAGArt\TelegramBotTts\Settings;
 
 /**
- * Effective per-chat TTS settings resolved from
- * tg_module_enablements.module_settings with platform defaults applied.
+ * Effective per-chat TTS settings resolved through
+ * ModuleSettingsContract::settingsFor() with platform defaults applied.
  * All clamps happen here — nothing downstream re-validates (§2.3, §8).
  */
 final readonly class TtsSettings
@@ -29,6 +29,12 @@ final readonly class TtsSettings
     public const LOCALE_RU = 'ru';
 
     public const LOCALE_EN = 'en';
+
+    public const LOCALE_FR = 'fr';
+
+    public const LOCALE_ES = 'es';
+
+    public const LOCALE_ZH = 'zh';
 
     public const DEFAULT_MAX_CHARS = 1000;
 
@@ -72,7 +78,7 @@ final readonly class TtsSettings
                 self::ERROR_MODE_AUTO,
             ),
             dailyQuota: max(0, min(10000, (int) ($raw['daily_quota'] ?? self::DEFAULT_DAILY_QUOTA))),
-            locale: self::clampEnum((string) ($raw['locale'] ?? self::LOCALE_RU), [self::LOCALE_RU, self::LOCALE_EN], self::LOCALE_RU),
+            locale: self::clampEnum((string) ($raw['locale'] ?? self::LOCALE_RU), [self::LOCALE_RU, self::LOCALE_EN, self::LOCALE_FR, self::LOCALE_ES, self::LOCALE_ZH], self::LOCALE_RU),
             noticeShown: (bool) ($raw['notice_shown'] ?? false),
             customProvider: is_array($raw['custom_provider'] ?? null) ? $raw['custom_provider'] : null,
         );

@@ -10,7 +10,6 @@ use BAGArt\TelegramBot\Contracts\Processing\Processors\TgModuleProcessorContract
 use BAGArt\TelegramBot\Contracts\TgApi\TgApiTypeDTOContract;
 use BAGArt\TelegramBot\Modules\TgCommandRegistry;
 use BAGArt\TelegramBot\Processing\BotProcessorContext;
-use BAGArt\TelegramBot\Processing\ErrorHandling\ProcessorErrorContext;
 use BAGArt\TelegramBot\Processing\TgProcessorDefaultTrait;
 use BAGArt\TelegramBot\TgApi\Methods\DTO\SendMessageMethodDTO;
 use BAGArt\TelegramBot\TgApi\Types\DTO\MessageTypeDTO;
@@ -121,10 +120,6 @@ class VoiceCommandProcessor implements TgModuleProcessorContract
         } catch (Throwable $e) {
             report($e);
         }
-    }
-
-    public function onException(ProcessorErrorContext $context): void
-    {
     }
 
     /**
