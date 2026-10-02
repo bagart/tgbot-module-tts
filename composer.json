@@ -61,7 +61,9 @@
         }
     },
     "scripts": {
-        "test": "composer exec pest",
+        "test": [
+            "sh -c 'if [ -x ../../../vendor/bin/pest ]; then cd ../../.. && vendor/bin/pest --testsuite TtsModule; else echo \"skip: unit suite is host-launched (artisan test / root phpunit.xml)\"; fi'"
+        ],
         "lint": "pint --dirty"
     },
     "config": {
