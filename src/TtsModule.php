@@ -10,6 +10,7 @@ use BAGArt\TelegramBot\Modules\TgModuleDescriptor;
 use BAGArt\TelegramBot\Modules\TgModuleRegistrar;
 use BAGArt\TelegramBot\TgApi\Types\DTO\CallbackQueryTypeDTO;
 use BAGArt\TelegramBot\TgApi\Types\DTO\MessageTypeDTO;
+use BAGArt\TelegramBotTts\Events\TtsAuditEvent;
 use BAGArt\TelegramBotTts\Processing\AutoSpeakProcessor;
 use BAGArt\TelegramBotTts\Processing\MenuProcessor;
 use BAGArt\TelegramBotTts\Processing\VoiceCommandProcessor;
@@ -60,5 +61,6 @@ class TtsModule implements TgModuleContract
         );
 
         $registrar->webUi(TtsWebUi::class);
+        $registrar->auditEvent(TtsAuditEvent::class);
     }
 }

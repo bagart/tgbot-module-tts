@@ -19,6 +19,7 @@ final class TelegramBotTtsServiceProvider extends ServiceProvider
         $this->app->singleton(Observability\TtsMetricsExporter::class);
         $this->app->singleton(Provider\AdapterSelectorContract::class, Provider\DefaultAdapterSelector::class);
         $this->app->singleton(Guard\GuardStoreContract::class, Guard\RedisGuardStore::class);
+        $this->app->singleton(Support\AudioFileStore::class, static fn (): Support\AudioFileStore => ModuleFactory::fileStore());
 
         // Artisan commands are declared in config/tg_modules.php (commands)
         // and registered by the module engine.

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace BAGArt\TelegramBotTts\Console;
 
+use BAGArt\TelegramBotTts\Events\TtsAuditEvent;
 use BAGArt\TelegramBotTts\Support\AudioFileStore;
 use BAGArt\TelegramBotTts\Support\SynthesisRecorder;
 use Illuminate\Console\Command;
@@ -24,6 +25,12 @@ class TtsPruneCommand extends Command
 
         $rows = $recorder->prune($retentionDays);
         $removed = $files->prune($retentionDays);
+
+        event(new TtsAuditEvent(
+            TtsAuditEvent::AUDIO_CACHE_PURGED,
+            subjectType: 'audio_cache',
+            context: ['cacheRows' => $rows, 'files' => $removed, 'retentionDays' => $retentionDays],
+        ));
 
         $this->info(sprintf(
             'tts:prune — removed %d cache row(s), %d file(s), retention %d day(s)',

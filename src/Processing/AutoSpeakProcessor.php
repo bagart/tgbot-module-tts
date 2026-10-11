@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace BAGArt\TelegramBotTts\Processing;
 
+use BAGArt\TelegramBotTts\Events\TtsAuditEvent;
 use BAGArt\TelegramBot\Configs\TgBotConfig;
 use BAGArt\TelegramBot\Contracts\Outbound\TgSenderContract;
 use BAGArt\TelegramBot\Contracts\Processing\Processors\TgModuleProcessorContract;
@@ -136,6 +137,14 @@ class AutoSpeakProcessor implements TgModuleProcessorContract
                         'custom_provider' => $normalized,
                     ]);
 
+                    event(new TtsAuditEvent(
+                        TtsAuditEvent::PROVIDER_CONFIG_CHANGED,
+                        botId: $botId,
+                        subjectType: 'chat',
+                        subjectId: $chatId,
+                        context: ['providerKey' => ProviderRegistry::CUSTOM_KEY],
+                    ));
+
                     break;
 
                 case PendingInputService::ACTION_TOKEN:
@@ -150,6 +159,14 @@ class AutoSpeakProcessor implements TgModuleProcessorContract
                         ['token' => trim(mb_substr($text, 0, 512))],
                     );
 
+                    event(new TtsAuditEvent(
+                        TtsAuditEvent::PROVIDER_TOKEN_CREATED,
+                        botId: $botId,
+                        subjectType: 'tts_token',
+                        subjectId: $providerKey,
+                        context: ['providerKey' => $providerKey],
+                    ));
+
                     break;
 
                 case PendingInputService::ACTION_VOICE:
@@ -157,6 +174,14 @@ class AutoSpeakProcessor implements TgModuleProcessorContract
 
                     if ($voice !== '') {
                         $this->settings->patch($botId, $chatId, ['voice' => $voice]);
+
+                        event(new TtsAuditEvent(
+                            TtsAuditEvent::CHAT_VOICE_CHANGED,
+                            botId: $botId,
+                            subjectType: 'chat',
+                            subjectId: $chatId,
+                            newState: ['voice' => $voice],
+                        ));
                     }
 
                     break;

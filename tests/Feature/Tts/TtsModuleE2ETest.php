@@ -24,6 +24,7 @@ use BAGArt\TelegramBot\TgApi\Types\DTO\UserTypeDTO;
 use BAGArt\TelegramBot\TgApi\Types\Enum\ChatPropTypeEnum;
 use BAGArt\TelegramBot\TgBotSetupFactory;
 use BAGArt\TelegramBotManagement\Models\TgBot;
+use BAGArt\TelegramBotTts\Events\TtsAuditEvent;
 use BAGArt\TelegramBotTts\Guard\ArrayGuardStore;
 use BAGArt\TelegramBotTts\Guard\GuardStoreContract;
 use BAGArt\TelegramBotTts\ModuleFactory;
@@ -40,6 +41,7 @@ use BAGArt\TelegramBotTts\Provider\VoiceCatalog;
 use BAGArt\TelegramBotTts\Provider\VoiceProviderConfig;
 use BAGArt\TelegramBotTts\Ui\CallbackRoute;
 use BAGArt\TelegramBotTts\Ui\PendingInputService;
+use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Http;
 
 /*
@@ -655,4 +657,67 @@ it('honors the silent and emoji error modes when the provider fails', function (
 
     expect(ttsTexts($silentSpy))->toBe([])
         ->and(ttsTexts($emojiSpy))->toBe(['😕']);
+});
+
+it('dispatches tts.settings.changed from the autospeak panel toggle (F2 .changed)', function () {
+    Event::fake([TtsAuditEvent::class]);
+
+    ttsMenuProcessor(ttsSenderSpy())
+        ->process(ttsCallbackQuery('cbq_audit', 777, CallbackRoute::VERB_AUTOSPEAK_ON), ttsBotConfig());
+
+    Event::assertDispatched(
+        TtsAuditEvent::class,
+        fn (TtsAuditEvent $event): bool => $event->operation() === TtsAuditEvent::SETTINGS_CHANGED
+            && $event->subjectType() === 'chat'
+            && $event->subjectId() === '777'
+            && $event->actorId() === '777'
+            && $event->newState() === ['autoSpeak' => true],
+    );
+});
+
+it('dispatches tts.provider.token.created on a pasted key without leaking the secret (F1)', function () {
+    Event::fake([TtsAuditEvent::class]);
+
+    $token = 'sk-test-secret-'.bin2hex(random_bytes(8));
+    ModuleFactory::pending()->start(
+        'test_bot',
+        777,
+        777,
+        PendingInputService::ACTION_TOKEN,
+        ['provider_key' => 'openai'],
+    );
+
+    ttsProcessorWithSender(AutoSpeakProcessor::class, ttsSenderSpy())
+        ->process(ttsPrivateMessage(777, $token), ttsBotConfig());
+
+    expect(
+        \BAGArt\TelegramBotTts\Models\TtsToken::query()
+            ->where('bot_id', 'test_bot')
+            ->where('provider_key', 'openai')
+            ->exists(),
+    )->toBeTrue();
+
+    Event::assertDispatched(
+        TtsAuditEvent::class,
+        fn (TtsAuditEvent $event): bool => $event->operation() === TtsAuditEvent::PROVIDER_TOKEN_CREATED
+            && $event->subjectType() === 'tts_token'
+            && $event->subjectId() === 'openai'
+            && $event->context() === ['providerKey' => 'openai'],
+    );
+
+    $payload = json_encode(Event::dispatched(TtsAuditEvent::class)->all());
+    expect($payload)->not->toContain($token);
+});
+
+it('dispatches tts.audio.cache.purged from tts:prune (F3 CLI)', function () {
+    Event::fake([TtsAuditEvent::class]);
+
+    $this->artisan('tts:prune')->assertExitCode(0);
+
+    Event::assertDispatched(
+        TtsAuditEvent::class,
+        fn (TtsAuditEvent $event): bool => $event->operation() === TtsAuditEvent::AUDIO_CACHE_PURGED
+            && $event->subjectType() === 'audio_cache'
+            && isset($event->context()['retentionDays']),
+    );
 });

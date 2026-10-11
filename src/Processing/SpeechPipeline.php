@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace BAGArt\TelegramBotTts\Processing;
 
+use BAGArt\TelegramBotTts\Events\TtsAuditEvent;
 use BAGArt\TelegramBot\Configs\TgBotConfig;
 use BAGArt\TelegramBot\Contracts\Outbound\TgSenderContract;
 use BAGArt\TelegramBot\TgApi\Methods\DTO\SendMessageMethodDTO;
@@ -257,6 +258,14 @@ class SpeechPipeline
     {
         try {
             $this->settingsService->patch((string) $botConfig->botId, $chatId, ['notice_shown' => true]);
+
+            event(new TtsAuditEvent(
+                TtsAuditEvent::NOTICE_FLAG_CHANGED,
+                botId: (string) $botConfig->botId,
+                subjectType: 'chat',
+                subjectId: $chatId,
+                context: ['providerKey' => $providerKey],
+            ));
         } catch (Throwable $e) {
             Log::warning('TTS: could not persist notice_shown flag', ['exception' => $e::class]);
 

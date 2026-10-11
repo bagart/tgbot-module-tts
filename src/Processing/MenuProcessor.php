@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace BAGArt\TelegramBotTts\Processing;
 
+use BAGArt\TelegramBotTts\Events\TtsAuditEvent;
 use BAGArt\TelegramBot\Configs\TgBotConfig;
 use BAGArt\TelegramBot\Contracts\ApiCommunication\TgBotApiDTOClientContract;
 use BAGArt\TelegramBot\Contracts\Outbound\TgSenderContract;
@@ -134,7 +135,17 @@ class MenuProcessor implements TgModuleProcessorContract
                 // Auto-speak is a private-chat feature only (T10); the
                 // keyboard hides it in groups anyway.
                 if ($isPrivateChat) {
-                    $this->settings->patch($botId, $chatId, ['auto_speak' => $verb === CallbackRoute::VERB_AUTOSPEAK_ON]);
+                    $enabled = $verb === CallbackRoute::VERB_AUTOSPEAK_ON;
+                    $this->settings->patch($botId, $chatId, ['auto_speak' => $enabled]);
+
+                    event(new TtsAuditEvent(
+                        TtsAuditEvent::SETTINGS_CHANGED,
+                        botId: $botId,
+                        subjectType: 'chat',
+                        subjectId: $chatId,
+                        actorId: $userTgId,
+                        newState: ['autoSpeak' => $enabled],
+                    ));
                 }
 
                 $this->answer($botConfig, $query);
@@ -187,6 +198,16 @@ class MenuProcessor implements TgModuleProcessorContract
                 }
 
                 $this->settings->patch($botId, $chatId, ['voice' => $voice]);
+
+                event(new TtsAuditEvent(
+                    TtsAuditEvent::VOICE_CHANGED,
+                    botId: $botId,
+                    subjectType: 'chat',
+                    subjectId: $chatId,
+                    actorId: $userTgId,
+                    newState: ['voice' => $voice],
+                ));
+
                 $this->answer($botConfig, $query, Strings::get($locale, 'saved'));
                 $this->renderPage($botConfig, $chatId, $isPrivateChat);
 
@@ -196,6 +217,16 @@ class MenuProcessor implements TgModuleProcessorContract
                 $current = $this->settings->get($botId, $chatId)->caption;
                 $next = MenuRenderer::nextCaption($current);
                 $this->settings->patch($botId, $chatId, ['caption' => $next]);
+
+                event(new TtsAuditEvent(
+                    TtsAuditEvent::CAPTION_CHANGED,
+                    botId: $botId,
+                    subjectType: 'chat',
+                    subjectId: $chatId,
+                    actorId: $userTgId,
+                    oldState: ['caption' => $current],
+                    newState: ['caption' => $next],
+                ));
                 $this->answer($botConfig, $query, $next);
                 $this->renderPage($botConfig, $chatId, $isPrivateChat);
 
@@ -205,6 +236,16 @@ class MenuProcessor implements TgModuleProcessorContract
                 $current = $this->settings->get($botId, $chatId)->onError;
                 $next = MenuRenderer::nextErrorMode($current);
                 $this->settings->patch($botId, $chatId, ['on_error' => $next]);
+
+                event(new TtsAuditEvent(
+                    TtsAuditEvent::ERROR_HANDLING_CHANGED,
+                    botId: $botId,
+                    subjectType: 'chat',
+                    subjectId: $chatId,
+                    actorId: $userTgId,
+                    oldState: ['onError' => $current],
+                    newState: ['onError' => $next],
+                ));
                 $this->answer($botConfig, $query, $next);
                 $this->renderPage($botConfig, $chatId, $isPrivateChat);
 
@@ -282,6 +323,15 @@ class MenuProcessor implements TgModuleProcessorContract
             'provider_key' => $providerKey,
             'custom_provider' => null,
         ]);
+
+        event(new TtsAuditEvent(
+            TtsAuditEvent::PROVIDER_CHANGED,
+            botId: $botId,
+            subjectType: 'chat',
+            subjectId: $chatId,
+            actorId: $userTgId,
+            newState: ['providerKey' => $providerKey],
+        ));
 
         $preset = $this->registry->get($providerKey);
 
